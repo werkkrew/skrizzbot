@@ -4,9 +4,9 @@ My fork of the phenny/jenni/willie Python IRC bot.  Using this bot as a platform
 
 # Credits #
 
-[Phenny](http://inamidst.com/phenny/)
-[Jinni](https://github.com/myano/jenni/)
-[Willie](http://willie.dftba.net/)
+  - [Phenny](http://inamidst.com/phenny/)
+  - [Jinni](https://github.com/myano/jenni/)
+  - [Willie](http://willie.dftba.net/)
 
 # Documentation #
 
