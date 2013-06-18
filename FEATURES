@@ -1,6 +1,11 @@
 Desired list of features:
 
 - Link Titles: Echo back the title of any link pasted
+	- Parse special types of links in a certain way.
+		- Quickmeme
+		- IMDB
+		- Reddit
+		- etc.
 - Funny Pictures: Parse image links posted to the channel and record, message back a random picture when asked
 - Funny Videos: Same as above for videos
 - Remind: Allow a user to set a reminder, ping them in channel when time (potentially integrate with prowl)
@@ -13,5 +18,3 @@ Desired list of features:
 - Tumblr: Allow users to post an image/video/other to a tumblr account in the bots name
 - Markov: Some implementation of a markov engine with canned responses and other features
 - RSS Integration: Allow the bot to subscribe to RSS feeds and report them to the channel
-- IMDB Integration: Retrieve movie information
-- Transcribe Quickmeme links
