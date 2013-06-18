@@ -15,7 +15,8 @@ import subprocess
 
 
 @skrizz.module.command("reload")
-@skrizz.module.priority("low")
+@skrizz.module.priority("high")
+@skrizz.module.example('.reload <module_name>, use * or leave blank to reload all modules.')
 @skrizz.module.thread(False)
 def f_reload(skrizz, trigger):
     """Reloads a module, for use by admins only."""
@@ -30,7 +31,9 @@ def f_reload(skrizz, trigger):
         skrizz.callables = None
         skrizz.commands = None
         skrizz.setup()
-        return skrizz.reply('done')
+        count = skrizz.setup()
+        message = "Reloaded " + str(count[0]) + " Modules, " + str(count[1]) + " modules failed to load!"
+        return skrizz.reply(message)
 
     if not name in sys.modules:
         return skrizz.reply('%s: no such module!' % name)
@@ -89,7 +92,8 @@ update.rule = ('$nick', ['update'], r'(.+)')
 
 
 @skrizz.module.command("load")
-@skrizz.module.priority("low")
+@skrizz.module.priority("high")
+@skrizz.module.example('.load <module_name>')
 @skrizz.module.thread(False)
 def f_load(skrizz, trigger):
     """Loads a module, for use by admins only."""

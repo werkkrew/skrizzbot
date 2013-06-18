@@ -207,18 +207,5 @@ def save_config(bot, trigger):
         return
     bot.config.save()
 
-@skrizz.module.command('reload_new')
-@skrizz.module.example('.reload module_name|all')
-@skrizz.module.priority('high')
-def reload(bot, trigger):
-    """Attempt to reload modules."""
-    if not trigger.admin:
-        bot.reply("Only an admin can reload modules!")
-    else:
-        count = bot.setup()
-        message = "Reloaded " + str(count[0]) + " Modules, " + str(count[1]) + " modules failed to load!"
-        bot.reply(message)
-        return 
-
 if __name__ == '__main__':
     print __doc__.strip()
