@@ -1,10 +1,6 @@
 """
-ai.py - Artificial Intelligence Module
-Copyright 2009-2011, Michael Yanovich, yanovich.net
+markov.py - markov chain language module thing
 Copyright 2013, Bryan Chain, http://www.bryanchain.com
-
-https://github.com/ericflo/yourmomdotcom/blob/master/yourmomdotcom.py
-https://github.com/coleifer/irc/blob/master/bots/redisbot.py#L103
 
 Licensed under the Eiffel Forum License 2.
 """
