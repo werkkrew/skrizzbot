@@ -187,7 +187,7 @@ class SkrizzDB(object):
             cols = cols[:-2]
         return cols + ')'
 
-    def add_table(self, name, columns, key):
+    def add_table(self, name, columns):
         """
         Add a column with the given ``name`` and ``key``, which has the given
         ``columns``. Each element in ``columns`` may be either a string giving

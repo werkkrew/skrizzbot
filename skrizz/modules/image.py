@@ -15,7 +15,7 @@ import sys
 import os
 
 
-image_url = r'(https?:\/\/(?:[a-z\-]+\.)+[a-z]{2,6}(?:\/[^\/#?]+)+\.(?:jpe?g|gif|png))'
+image_url = r'(https?:\/\/(?:[a-z0-9\-]+\.)+[a-z0-9]{2,6}(?:\/[^\/#?]+)+\.(?:jpe?g|gif|png))'
 
 google_sbi_url = 'https://www.google.com/searchbyimage?&image_url='
 karmadecay_search_url = 'http://karmadecay.com/search?kdtoolver=b1&q='

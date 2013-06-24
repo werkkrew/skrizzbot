@@ -9,6 +9,7 @@ Licensed under the Eiffel Forum License 2.
 import tweepy
 import time
 import re
+from skrizz.tools import Nick
 
 def configure(config):
     """
@@ -82,20 +83,30 @@ f_info.example = '.twitinfo aplsuk'
 
 def f_update(skrizz, trigger):
     """Tweet with Skrizz's account. Admin-only."""
+    tweet = trigger.group(2)
+    auth = tweepy.OAuthHandler(skrizz.config.twitter.consumer_key, skrizz.config.twitter.consumer_secret)
+    auth.set_access_token(skrizz.config.twitter.access_token, skrizz.config.twitter.access_token_secret)
+    api = tweepy.API(auth)
+
+    if tweet.startswith('that'):
+        recent = skrizz.memory['markov'][trigger.sender][Nick(trigger.nick)]
+        update = recent[0]
+        api.update_status(update)
+        skrizz.reply("Tweeted: " + update)
+        return
+    
     if trigger.admin:
-        auth = tweepy.OAuthHandler(skrizz.config.twitter.consumer_key, skrizz.config.twitter.consumer_secret)
-        auth.set_access_token(skrizz.config.twitter.access_token, skrizz.config.twitter.access_token_secret)
-        api = tweepy.API(auth)
-
-        print api.me().name
-
-        update = str(trigger.group(2)) + " ^" + trigger.nick
-        if len(update) <= 140:
-            api.update_status(update)
-            skrizz.reply("Successfully posted to my twitter account.")
+        if len(trigger.group(2)) > 3:
+            update = str(trigger.group(2)) + " ^" + trigger.nick
+            if len(update) <= 140:
+                api.update_status(update)
+                skrizz.reply("Successfully posted to my twitter account.")
+            else:
+                toofar = len(update) - 140
+                skrizz.reply("Please shorten the length of your message by: " + str(toofar) + " characters.")
         else:
-            toofar = len(update) - 140
-            skrizz.reply("Please shorten the length of your message by: " + str(toofar) + " characters.")
+            skrizz.reply("Your message is too short!")
+
 f_update.commands = ['tweet']
 f_update.priority = 'medium'
 f_update.example = '.tweet Hello World!'
