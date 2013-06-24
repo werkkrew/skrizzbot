@@ -17,4 +17,6 @@ Desired list of features:
 - Reddit: Command to report back top links from reddit/subreddits
 - Tumblr: Allow users to post an image/video/other to a tumblr account in the bots name
 - Markov: Some implementation of a markov engine with canned responses and other features
+	- Integrate with bot config files
+	- Implement a way for the database to be global or local based on config
 - RSS Integration: Allow the bot to subscribe to RSS feeds and report them to the channel
