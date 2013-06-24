@@ -20,6 +20,7 @@ limit = 3
 ignore = '/','.','!'
 separator = '\x01'
 stop_word = '\x02'
+respond = True
 
 #chain_length = bot.config.markov.chain_length
 #chattiness = bot.config.markov.chattiness
@@ -106,8 +107,11 @@ def log(bot, trigger):
     if message.startswith(ignore):
         return
 
-    ping = re.compile('(?i).*' + bot.nick + '.*')
-    ping_me = ping.match(message) 
+    if respond:
+        ping = re.compile('(?i).*' + bot.nick + '.*')
+        ping_me = ping.match(message) 
+    else:
+        ping_me = False
     
     # speak only when spoken to, or when the spirit moves me
     say_something = ping_me or (random.random() < chattiness)
