@@ -91,8 +91,12 @@ def f_update(skrizz, trigger):
     if tweet.startswith('that'):
         recent = skrizz.memory['markov'][trigger.sender][Nick(trigger.nick)]
         update = recent[-1]
+        truncated = ''
+        if len(update) > 140:
+             update = update[:135] + '...'
+             truncated = ' [TRUNCATED]'
         api.update_status(update)
-        skrizz.reply("Tweeted: " + update)
+        skrizz.reply("Tweeted: " + update + truncated)
         return
     
     if trigger.admin:
