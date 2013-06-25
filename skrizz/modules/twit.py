@@ -90,7 +90,7 @@ def f_update(skrizz, trigger):
 
     if tweet.startswith('that'):
         recent = skrizz.memory['markov'][trigger.sender][Nick(trigger.nick)]
-        update = recent[0]
+        update = recent[-1]
         api.update_status(update)
         skrizz.reply("Tweeted: " + update)
         return

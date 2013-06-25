@@ -176,7 +176,7 @@ def lastsaid(bot, trigger):
         bot.say('I haven\'t said anything in this channel recently.')
         return
     recent = bot.memory['markov'][trigger.sender][Nick(trigger.nick)]
-    bot.say(recent[0])
+    bot.say(recent[-1])
 
 @skrizz.module.command('teach')
 @skrizz.module.priority('low')
