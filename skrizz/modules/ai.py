@@ -136,8 +136,8 @@ def f_liquor(skrizz, trigger):
         randtime = random.uniform(0, 9)
         time.sleep(randtime)
         skrizz.say(random.choice(respond))
-f_lol.rule = '(?i).*(scotch|bourbon|whiskey).*'
-f_lol.priority = 'high'
+f_liquor.rule = '(?i).*(scotch|bourbon|whiskey).*'
+f_liquor.priority = 'high'
 
 
 def wb(skrizz, trigger):
