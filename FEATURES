@@ -20,4 +20,5 @@ Desired list of features:
 	- Integrate with bot config files
 	- Implement a way for the database to be global or local based on config
 	- Implement a word filter so the bot will not say certain words.
+	- Database optimizations, indexes, count weights
 - RSS Integration: Allow the bot to subscribe to RSS feeds and report them to the channel

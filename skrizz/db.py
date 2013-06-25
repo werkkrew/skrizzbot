@@ -249,7 +249,7 @@ class SkrizzDB(object):
                      passwd=self._passwd,
                      db=self._dbname)
         elif self.type == 'sqlite':
-            return sqlite3.connect(self._file)
+            return sqlite3.connect(self._file, timeout=3)
 
 
 class Table(object):

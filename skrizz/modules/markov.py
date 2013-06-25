@@ -28,7 +28,8 @@ respond = True
 #messages_to_generate = bot.config.markov.messages_to_generate
 
 def checkdb(cursor):
-    cursor.execute('CREATE TABLE IF NOT EXISTS markov ( channel, key, words )')
+    cursor.execute('CREATE TABLE IF NOT EXISTS markov ( channel STRING, key STRING, words STRING )')
+    cursor.execute('CREATE INDEX IF NOT EXISTS markov_idx ON markov (key)')
 
 def setup(bot):
     global SUB
@@ -92,7 +93,7 @@ def generate_message(bot, seed):
         #next_word = redis_conn.srandmember(key)
         if not next_word:
             break
-            
+           
         # create a new key combining the end of the old one and the next_word
         key = separator.join(words[1:] + [next_word])
 
