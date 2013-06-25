@@ -90,7 +90,7 @@ def generate_message(bot, seed):
         c.execute('SELECT words FROM markov WHERE key = %s ORDER BY RANDOM() LIMIT 1' % (SUB), (key,))
         row = c.fetchone()
         if row is not None:
-            next_word = str(row[0])
+            next_word = row[0].encode('utf-8')
         else:
             next_word = 0
         #next_word = redis_conn.srandmember(key)
