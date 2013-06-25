@@ -28,8 +28,11 @@ respond = True
 #messages_to_generate = bot.config.markov.messages_to_generate
 
 def checkdb(cursor):
+    # create markov database in this instance of the bots database with an index
     cursor.execute('CREATE TABLE IF NOT EXISTS markov ( channel STRING, key STRING, words STRING )')
     cursor.execute('CREATE INDEX IF NOT EXISTS markov_idx ON markov (key)')
+    # switch database mode from journal_mode = delete to wal for locking/performance issues
+    # cursor.execute('PRAGMA journal_mode = wal')
 
 def setup(bot):
     global SUB

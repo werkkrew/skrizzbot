@@ -143,6 +143,8 @@ class SkrizzDB(object):
                 continue
 
             cur.execute("PRAGMA table_info(%s);" % name)
+            # added journal_mode wal for markov performance: http://www.sqlite.org/wal.html
+            cur.execute("PRAGMA journal_mode = wal;")
             result = cur.fetchall()
             columns = []
             key = []
