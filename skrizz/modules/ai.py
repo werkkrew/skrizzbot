@@ -89,7 +89,7 @@ love3.rate = 30
 def f_lol(skrizz, trigger):
     randnum = random.random()
     if 0 < randnum < limit:
-        respond = ['haha', 'lol', 'rofl']
+        respond = ['haha', 'lol', 'rofl', 'ROFLCOPTER!', 'I didn\'t think it was that funny...']
         randtime = random.uniform(0, 9)
         time.sleep(randtime)
         skrizz.say(random.choice(respond))
@@ -128,6 +128,17 @@ def f_friday(skrizz, trigger):
     skrizz.say("Time to get drunk!")
 f_friday.rule = '(?i).*friday.*'
 f_friday.priority = 'high'
+
+def f_liquor(skrizz, trigger):
+    randnum = random.random()
+    if 0 < randnum < limit:
+        respond = ['Mmm Scotch...', 'Down in my belly.', 'Yum.']
+        randtime = random.uniform(0, 9)
+        time.sleep(randtime)
+        skrizz.say(random.choice(respond))
+f_lol.rule = '(?i).*(scotch|bourbon|whiskey).*'
+f_lol.priority = 'high'
+
 
 def wb(skrizz, trigger):
     skrizz.reply("Thank you!")
