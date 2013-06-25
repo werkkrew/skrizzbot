@@ -218,7 +218,7 @@ def teach(bot, trigger):
 
             c.close()
             f.close()
-            bot.msg(trigger.nick, 'Successfully added <' + str(lines) + '> worth of shit to my database!')
+            bot.say('Successfully added <' + str(lines) + '> worth of shit to my database!')
 
     return
 
