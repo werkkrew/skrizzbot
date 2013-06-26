@@ -31,8 +31,6 @@ def checkdb(cursor):
     # create markov database in this instance of the bots database with an index
     cursor.execute('CREATE TABLE IF NOT EXISTS markov ( channel STRING, key STRING, words STRING )')
     cursor.execute('CREATE INDEX IF NOT EXISTS markov_idx ON markov (key)')
-    # switch database mode from journal_mode = delete to wal for locking/performance issues
-    # cursor.execute('PRAGMA journal_mode = wal')
 
 def setup(bot):
     global SUB
@@ -61,16 +59,12 @@ def split_message(message):
         # ['what', 'up', 'bro', '\x02']
         words.append(stop_word)
             
-        # len(words) == 4, so range(4-2) == range(2) == 0, 1, meaning
-        # we return the following slices: [0:3], [1:4]
-        # or ['what', 'up', 'bro'], ['up', 'bro', '\x02']
         for i in range(len(words) - chain_length):
             yield words[i:i + chain_length + 1]
     
 def generate_message(bot, seed):
     key = seed
      
-    # keep a list of words we've seen
     gen_words = []
         
     # only follow the chain so far, up to <max words>
@@ -87,12 +81,16 @@ def generate_message(bot, seed):
         # reached the end of the chain and can bail
         conn = bot.db.connect()
         c = conn.cursor()
-        c.execute('SELECT words FROM markov WHERE key = %s ORDER BY RANDOM() LIMIT 1' % (SUB), (key,))
-        row = c.fetchone()
+        c.execute('SELECT words FROM markov WHERE key = %s' % (SUB), (key,))
+        rows = c.fetchall()
+        try:
+            row = random.choice(rows)
+        except:
+            row = None
         if row is not None:
             try:
                 next_word = row[0].encode('UTF-8')
-            except TypeError:
+            except:
                 next_word = str(row[0])
         else:
             next_word = 0
@@ -145,6 +143,7 @@ def log(bot, trigger):
         # if we should say something, generate some messages based on what
         # was just said and select the longest, then add it to the list
         if say_something:
+            start_time = time.time()
             best_message = ''
             for i in range(messages_to_generate):
                 generated = generate_message(bot, seed=key)
@@ -172,7 +171,9 @@ def log(bot, trigger):
         del templist[:-10]
 
         bot.memory['markov'][trigger.sender][Nick(bot.nick)] = templist
-        bot.say(message)
+        end_time = time.time()
+        total_time = end_time - start_time
+        bot.say(message + ' (' + str(total_time) + 's)')
 
 
 @skrizz.module.command('lastsaid')
@@ -202,6 +203,7 @@ def teach(bot, trigger):
         except IOError:
             bot.say('Invalid file.')
         else:
+            start_time = time.time()
             bot.say('Processing file: ' + filename)
             lines = 0
             conn = bot.db.connect()
@@ -224,7 +226,9 @@ def teach(bot, trigger):
 
             c.close()
             f.close()
-            bot.say('Successfully added <' + str(lines) + '> worth of shit to my database!')
+            end_time = time.time()
+            total_time = end_time - start_time, "seconds"
+            bot.say('Successfully added <' + str(lines) + '> worth of shit to my database in ' + str(total_time) + '!')
 
     return
 
