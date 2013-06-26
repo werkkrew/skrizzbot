@@ -132,19 +132,23 @@ class SkrizzDB(object):
         except:
             print 'Error: Unable to connect to DB.'
             return
-
+           
         #Set up existing tables and columns
         cur = db.cursor()
+        # added journal_mode wal for markov performance: http://www.sqlite.org/wal.html
+        cur.execute("PRAGMA journal_mode = wal;")
+        db.commit()
+
         cur.execute("SELECT * FROM sqlite_master;")
         tables = cur.fetchall()
         for table in tables:
             name = table[1]
             if name.startswith('sqlite_'):
                 continue
+            if name.endswith('_idx'):
+                continue
 
             cur.execute("PRAGMA table_info(%s);" % name)
-            # added journal_mode wal for markov performance: http://www.sqlite.org/wal.html
-            cur.execute("PRAGMA journal_mode = wal;")
             result = cur.fetchall()
             columns = []
             key = []
