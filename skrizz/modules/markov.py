@@ -91,7 +91,7 @@ def generate_message(bot, seed):
         row = c.fetchone()
         if row is not None:
             try:
-                next_word = unicode(row[0], encoding='UTF-8')
+                next_word = row[0].encode('UTF-8')
             except TypeError:
                 next_word = str(row[0])
         else:
@@ -162,16 +162,16 @@ def log(bot, trigger):
         # Add a log of things the bot has said, if there isn't already one
         if trigger.sender not in bot.memory['markov']:
             bot.memory['markov'][trigger.sender] = dict()
-        if Nick(trigger.nick) not in bot.memory['markov'][trigger.sender]:
-            bot.memory['markov'][trigger.sender][Nick(trigger.nick)] = list()
+        if Nick(bot.nick) not in bot.memory['markov'][trigger.sender]:
+            bot.memory['markov'][trigger.sender][Nick(bot.nick)] = list()
 
-        templist = bot.memory['markov'][trigger.sender][Nick(trigger.nick)] = list()
+        templist = bot.memory['markov'][trigger.sender][Nick(bot.nick)] = list()
         templist.append(message)
 
         # Only hold on to 10 things
         del templist[:-10]
 
-        bot.memory['markov'][trigger.sender][Nick(trigger.nick)] = templist
+        bot.memory['markov'][trigger.sender][Nick(bot.nick)] = templist
         bot.say(message)
 
 
@@ -181,7 +181,7 @@ def lastsaid(bot, trigger):
     if trigger.sender not in bot.memory['markov']:
         bot.say('I haven\'t said anything in this channel recently.')
         return
-    recent = bot.memory['markov'][trigger.sender][Nick(trigger.nick)]
+    recent = bot.memory['markov'][trigger.sender][Nick(bot.nick)]
     bot.say(recent[-1])
 
 @skrizz.module.command('teach')

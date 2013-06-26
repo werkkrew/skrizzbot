@@ -89,7 +89,7 @@ def f_update(skrizz, trigger):
     api = tweepy.API(auth)
 
     if tweet.startswith('that'):
-        recent = skrizz.memory['markov'][trigger.sender][Nick(trigger.nick)]
+        recent = skrizz.memory['markov'][trigger.sender][Nick(bot.nick)]
         update = recent[-1]
         truncated = ''
         if len(update) > 140:
