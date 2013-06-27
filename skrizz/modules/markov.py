@@ -8,10 +8,14 @@ import random
 import time
 import re
 import os
+import cPickle as pickle
 import skrizz.module
+import sys
+import sqlite3
 from skrizz.tools import Nick
 
-chain_length = 2
+chain_length = 2 # supported values are 2 or 3, anything bigger im not dealing with.
+db = '/home/wkbec/.skrizz/markov.db'
 chattiness = 0.05
 max_words = 30
 messages_to_generate = 5
@@ -26,19 +30,45 @@ respond = True
 #chattiness = bot.config.markov.chattiness
 #max_words = bot.config.markov.max_words
 #messages_to_generate = bot.config.markov.messages_to_generate
+#db = bot.config.markov.database_file
+#respond = bot.config.markov.respond
+#filter = bot.config.markov.filter
 
-def checkdb(cursor):
-    # create markov database in this instance of the bots database with an index
-    cursor.execute('CREATE TABLE IF NOT EXISTS markov ( channel STRING, key STRING, words STRING )')
-    cursor.execute('CREATE INDEX IF NOT EXISTS markov_idx ON markov (key)')
+brain = dict()
+
+def build_brain(bot):
+    start_time = time.time()
+    brain.clear()
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    c.execute('SELECT key,next_words FROM markov2')
+    rows = c.fetchall()
+    if rows is not None:
+        for row in rows:
+            key = row[0]
+            next_words = pickle.loads(str(row[1]))
+            brain[key] = next_words
+    end_time = time.time()
+    total_time = end_time - start_time, "seconds"
+    brain_size = sys.getsizeof(brain)
+    bot.say("Time to generate brain: " + str(total_time))
+    bot.say("Size of brain is: " + str(len(brain)) + " keys and " + str(brain_size) + " bytes")
 
 def setup(bot):
     global SUB
     SUB = (bot.db.substitution,)
     bot.memory['markov'] = dict()
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    c.execute('CREATE TABLE IF NOT EXISTS markov2 ( key STRING PRIMARY KEY ON CONFLICT REPLACE, next_words BLOB )')
+    c.execute("PRAGMA journal_mode = wal;")
+    conn.commit()
+    c.close()
+    build_brain(bot)
 
 def configure(config):
 
+    # add all config options here
     if config.option('Configure Markov?', False):
         config.interactive_add('markov', 'chain_length', 'Chain Length')
         config.interactive_add('markov', 'chattiness', 'Chattiness')
@@ -61,47 +91,61 @@ def split_message(message):
             
         for i in range(len(words) - chain_length):
             yield words[i:i + chain_length + 1]
-    
-def generate_message(bot, seed):
+
+def get_next_word(key):
+    if key not in brain:
+        return 0
+    else:
+        return weighted_choice(brain[key])
+
+def weighted_choice(words):
+   total = sum(w for c, w in words.iteritems())
+   r = random.uniform(0, total)
+   upto = 0
+   for c, w in words.iteritems():
+      if upto + w > r:
+         return c
+      upto += w
+   assert False, "Shouldn't get here"
+
+def generate_message(seed):
     key = seed
-     
+
     gen_words = []
-        
+
     # only follow the chain so far, up to <max words>
     for i in xrange(max_words):
-     
-        # split the key on the separator to extract the words -- the key
-        # might look like "this\x01is" and split out into ['this', 'is']
+
         words = key.split(separator)
-            
-        # add the word to the list of words in our generated message
         gen_words.append(words[0])
 
-        # get a new word that lives at this key -- if none are present we've
-        # reached the end of the chain and can bail
-        conn = bot.db.connect()
-        c = conn.cursor()
-        c.execute('SELECT words FROM markov WHERE key = %s' % (SUB), (key,))
-        rows = c.fetchall()
-        try:
-            row = random.choice(rows)
-        except:
-            row = None
-        if row is not None:
-            try:
-                next_word = row[0].encode('UTF-8')
-            except:
-                next_word = str(row[0])
-        else:
-            next_word = 0
-        #next_word = redis_conn.srandmember(key)
+        next_word = get_next_word(key)
+
         if not next_word:
             break
-           
-        # create a new key combining the end of the old one and the next_word
+
         key = separator.join(words[1:] + [next_word])
 
     return ' '.join(gen_words)
+   
+def add_data(key, next_word):
+    if key in brain:
+        if next_word in brain[key]:
+            weight = brain[key][next_word] + 1
+        else:
+            weight = 1
+        brain[key][next_word] = weight
+    else:
+        brain[key] = {next_word: 1}
+
+    next_words = brain[key]
+    next_words = pickle.dumps(next_words)
+
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    c.execute('INSERT INTO markov2 VALUES (%s, %s)' % (SUB*2), (key, sqlite3.Binary(next_words)))
+    conn.commit()
+    c.close()
 
 @skrizz.module.rule('.*')
 @skrizz.module.priority('low')
@@ -126,34 +170,23 @@ def log(bot, trigger):
     # split up the incoming message into chunks that are 1 word longer than
     # the size of the chain, e.g. ['what', 'up', 'bro'], ['up', 'bro', '\x02']
     for words in split_message(sanitize_message(message)):
-        # grab everything but the last word
-        key = separator.join(words[:-1])
-           
-        # add the last word to the set
-        conn = bot.db.connect()
-        c = conn.cursor()
-        checkdb(c)
-        conn.commit()
-        c.execute('INSERT INTO markov VALUES (%s, %s, %s)' % (SUB*3), (trigger.sender, key, words[-1])) 
-        conn.commit()
-        c.close()
-        #bot.db.markov.insert(key, {'words': words[-1], 'channel': trigger.sender})
-        #redis_conn.sadd(key, words[-1])
-            
-        # if we should say something, generate some messages based on what
-        # was just said and select the longest, then add it to the list
+
+        key = separator.join(words[:-1]).encode('utf-8')
+        next_word = words[-1].encode('utf-8')
+
+        add_data(key,next_word)
+
         if say_something:
             best_message = ''
             for i in range(messages_to_generate):
-                generated = generate_message(bot, seed=key)
+                generated = generate_message(seed=key)
                 if len(generated) > len(best_message):
                     best_message = generated
-                
+
             if best_message:
                 messages.append(best_message)
 
-        conn.close()    
-        
+
     if len(messages):
         message = random.choice(messages)
         
@@ -203,10 +236,6 @@ def teach(bot, trigger):
             start_time = time.time()
             bot.say('Processing file: ' + filename)
             lines = 0
-            conn = bot.db.connect()
-            c = conn.cursor()
-            checkdb(c)
-            conn.commit()
 
             for line in f:
                 lines = lines + 1
@@ -216,18 +245,22 @@ def teach(bot, trigger):
                 for words in split_message(sanitize_message(line)):
                     # grab everything but the last word
                     key = separator.join(words[:-1])
+                    next_word = words[-1]
+                    add_data(key,next_word)
 
-                    # add the last word to the set
-                    c.execute('INSERT INTO markov VALUES (%s, %s, %s)' % (SUB*3), (trigger.sender, key, words[-1]))
-                    conn.commit()
-
-            c.close()
-            f.close()
             end_time = time.time()
             total_time = end_time - start_time, "seconds"
             bot.say('Successfully added <' + str(lines) + '> worth of shit to my database in ' + str(total_time) + '!')
 
     return
+
+@skrizz.module.command('mstats')
+@skrizz.module.priority('low')
+def mstats(bot, trigger):
+    keys = len(brain)
+    size_dict = sys.getsizeof(brain)
+    size_file = os.path.getsize(db)
+    bot.say('[MARKOV STATS] Number of Keys: ' + str(keys) + ' | Dictionary size in memory: ' + str(size_dict/1024) + 'kb | Persistent Database Size: ' + str(size_file/1024/1024) + 'mb')
 
 
 
