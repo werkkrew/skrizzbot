@@ -143,7 +143,6 @@ def log(bot, trigger):
         # if we should say something, generate some messages based on what
         # was just said and select the longest, then add it to the list
         if say_something:
-            start_time = time.time()
             best_message = ''
             for i in range(messages_to_generate):
                 generated = generate_message(bot, seed=key)
@@ -171,9 +170,7 @@ def log(bot, trigger):
         del templist[:-10]
 
         bot.memory['markov'][trigger.sender][Nick(bot.nick)] = templist
-        end_time = time.time()
-        total_time = end_time - start_time
-        bot.say(message + ' (' + str(total_time) + 's)')
+        bot.say(message)
 
 
 @skrizz.module.command('lastsaid')
