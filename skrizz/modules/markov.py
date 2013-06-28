@@ -206,7 +206,7 @@ def mstats(bot, trigger):
     else:
         last_save = datetime.datetime.fromtimestamp(info['rdb_last_save_time']).strftime('%Y-%m-%d %H:%M:%S')
         changes = str(info['rdb_changes_since_last_save'])
-    bot.say('[REDIS STATS] Keys: ' + total_keys + ' | Memory Usage: ' + size_mem + ' | Persistence: last_save: ' + last_save + ' changes since: ' + changes + ' | Redis Version: ' + version)
+    bot.say('[REDIS MARKOV STATS] Keys: ' + total_keys + ' | Memory Usage: ' + size_mem + ' | Persistence: last_save: ' + last_save + ' changes since: ' + changes + ' | Redis Version: ' + version)
 
 
 
