@@ -26,3 +26,16 @@ def fucking_weather(skrizz, trigger):
 fucking_weather.commands = ['fucking_weather', 'fw']
 fucking_weather.rate = 30
 fucking_weather.priority = 'low'
+
+def fucking_dinner(skrizz, trigger):
+    page = web.get("http://www.whatthefuckshouldimakefordinner.com")
+    re_mark = re.compile('<dt><a href="(.*?)" target="_blank">(.*?)</a></dt>')
+    results = re_mark.findall(page)
+    if results:
+        skrizz.reply("WHY DON'T YOU EAT SOME FUCKING: " + results[0][1] + " HERE IS THE RECIPIE: " + results[0][0])
+    else:
+        skrizz.reply("I DON'T FUCKING KNOW, EAT PIZZA.")
+        return skrizz.NOLIMIT
+fucking_dinner.commands = ['fucking_dinner', 'fd', 'wtfsimfd']
+fucking_dinner.rate = 30
+fucking_dinner.priority = 'low'
