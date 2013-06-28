@@ -6,16 +6,13 @@ Licensed under the Eiffel Forum License 2.
 """
 import random
 import time
+import datetime
 import re
-import os
-import cPickle as pickle
 import skrizz.module
-import sys
-import sqlite3
+import redis
 from skrizz.tools import Nick
 
 chain_length = 2 # supported values are 2 or 3, anything bigger im not dealing with.
-db = '/home/wkbec/.skrizz/markov.db'
 chattiness = 0.05
 max_words = 30
 messages_to_generate = 5
@@ -25,46 +22,22 @@ ignore = '/','.','!'
 separator = '\x01'
 stop_word = '\x02'
 respond = True
+scope = 'global' # supported values are global or channel
 
 #chain_length = bot.config.markov.chain_length
 #chattiness = bot.config.markov.chattiness
 #max_words = bot.config.markov.max_words
 #messages_to_generate = bot.config.markov.messages_to_generate
-#db = bot.config.markov.database_file
+#scope = bot.config.markov.scope
 #respond = bot.config.markov.respond
 #filter = bot.config.markov.filter
 
-brain = dict()
-
-def build_brain(bot):
-    start_time = time.time()
-    brain.clear()
-    conn = sqlite3.connect(db)
-    c = conn.cursor()
-    c.execute('SELECT key,next_words FROM markov2')
-    rows = c.fetchall()
-    if rows is not None:
-        for row in rows:
-            key = row[0]
-            next_words = pickle.loads(str(row[1]))
-            brain[key] = next_words
-    end_time = time.time()
-    total_time = end_time - start_time, "seconds"
-    brain_size = sys.getsizeof(brain)
-    bot.say("Time to generate brain: " + str(total_time))
-    bot.say("Size of brain is: " + str(len(brain)) + " keys and " + str(brain_size) + " bytes")
+redis_conn = redis.Redis()
 
 def setup(bot):
     global SUB
     SUB = (bot.db.substitution,)
     bot.memory['markov'] = dict()
-    conn = sqlite3.connect(db)
-    c = conn.cursor()
-    c.execute('CREATE TABLE IF NOT EXISTS markov2 ( key STRING PRIMARY KEY ON CONFLICT REPLACE, next_words BLOB )')
-    c.execute("PRAGMA journal_mode = wal;")
-    conn.commit()
-    c.close()
-    build_brain(bot)
 
 def configure(config):
 
@@ -92,22 +65,6 @@ def split_message(message):
         for i in range(len(words) - chain_length):
             yield words[i:i + chain_length + 1]
 
-def get_next_word(key):
-    if key not in brain:
-        return 0
-    else:
-        return weighted_choice(brain[key])
-
-def weighted_choice(words):
-   total = sum(w for c, w in words.iteritems())
-   r = random.uniform(0, total)
-   upto = 0
-   for c, w in words.iteritems():
-      if upto + w > r:
-         return c
-      upto += w
-   assert False, "Shouldn't get here"
-
 def generate_message(seed):
     key = seed
 
@@ -119,7 +76,7 @@ def generate_message(seed):
         words = key.split(separator)
         gen_words.append(words[0])
 
-        next_word = get_next_word(key)
+        next_word = redis_conn.srandmember(key)
 
         if not next_word:
             break
@@ -128,31 +85,12 @@ def generate_message(seed):
 
     return ' '.join(gen_words)
    
-def add_data(key, next_word):
-    if key in brain:
-        if next_word in brain[key]:
-            weight = brain[key][next_word] + 1
-        else:
-            weight = 1
-        brain[key][next_word] = weight
-    else:
-        brain[key] = {next_word: 1}
-
-    next_words = brain[key]
-    next_words = pickle.dumps(next_words)
-
-    conn = sqlite3.connect(db)
-    c = conn.cursor()
-    c.execute('INSERT INTO markov2 VALUES (%s, %s)' % (SUB*2), (key, sqlite3.Binary(next_words)))
-    conn.commit()
-    c.close()
-
 @skrizz.module.rule('.*')
 @skrizz.module.priority('low')
 def log(bot, trigger):
 
     message = trigger.group()
-
+    
     if message.startswith(ignore):
         return
 
@@ -174,12 +112,12 @@ def log(bot, trigger):
         key = separator.join(words[:-1]).encode('utf-8')
         next_word = words[-1].encode('utf-8')
 
-        add_data(key,next_word)
+        redis_conn.sadd(key, next_word)
 
         if say_something:
             best_message = ''
             for i in range(messages_to_generate):
-                generated = generate_message(seed=key)
+                generated = generate_message(key)
                 if len(generated) > len(best_message):
                     best_message = generated
 
@@ -246,21 +184,24 @@ def teach(bot, trigger):
                     # grab everything but the last word
                     key = separator.join(words[:-1])
                     next_word = words[-1]
-                    add_data(key,next_word)
+                    redis_conn.sadd(key, next_word)
 
             end_time = time.time()
             total_time = end_time - start_time, "seconds"
-            bot.say('Successfully added <' + str(lines) + '> worth of shit to my database in ' + str(total_time) + '!')
+            bot.say('Successfully added <' + str(lines) + '> lines worth of shit to my database in ' + str(total_time) + '!')
 
     return
 
 @skrizz.module.command('mstats')
 @skrizz.module.priority('low')
 def mstats(bot, trigger):
-    keys = len(brain)
-    size_dict = sys.getsizeof(brain)
-    size_file = os.path.getsize(db)
-    bot.say('[MARKOV STATS] Number of Keys: ' + str(keys) + ' | Dictionary size in memory: ' + str(size_dict/1024) + 'kb | Persistent Database Size: ' + str(size_file/1024/1024) + 'mb')
+    info = redis_conn.info()
+    total_keys = info['db0']['keys']
+    local = ''
+    size_mem = info['used_memory_human']
+    last_save = datetime.datetime.fromtimestamp(info['rdb_last_save_time']).strftime('%Y-%m-%d %H:%M:%S')
+    changes = info['rdb_changes_since_last_save']
+    bot.say('[REDIS STATS] Keys: ' + str(total_keys) + ' | Memory Usage: ' + str(size_mem) + ' | Persistence: last_save: ' + last_save + ' changes since: ' + str(changes))
 
 
 

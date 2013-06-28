@@ -22,3 +22,4 @@ Desired list of features:
 	- Implement a word filter so the bot will not say certain words.
 	- Database optimizations, indexes, count weights
 - RSS Integration: Allow the bot to subscribe to RSS feeds and report them to the channel
+- "Fucks Given" Meter

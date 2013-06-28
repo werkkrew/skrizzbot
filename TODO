@@ -10,17 +10,25 @@ Desired list of features:
 - Funny Videos: Same as above for videos
 - Remind: Allow a user to set a reminder, ping them in channel when time (potentially integrate with prowl)
 - Twitter: Allow users to tweet through the bots twitter account
-	-Allow users to set up their own twitter within the bot and support additional commands
+	- Allow users to set up their own twitter within the bot and support additional commands
 - Quote: Allow users to add a quote from a user to a database and message back a random quote when asked
+	- Might not do this due to not wanting to keep all those logs.
 - Wikipedia: Command to retrieve a portion of a wikipedia article
 - Wiktionary: Same as above for wiktionary
 - Reddit: Command to report back top links from reddit/subreddits
 - Tumblr: Allow users to post an image/video/other to a tumblr account in the bots name
 - Markov: Some implementation of a markov engine with canned responses and other features
 	- Integrate with bot config files
+		- Document real-time configuration changes?
 	- Implement a way for the database to be global or local based on config
-		- Consider a way for multiple instances of the bot to share the same dict?
-		- Implement command to rebuild the brain from the database dynamically.
 	- Implement a word filter so the bot will not say certain words (but still record them)
 	- Database optimizations, indexes, count weights
 - RSS Integration: Allow the bot to subscribe to RSS feeds and report them to the channel
+
+- Refactor entire codebase to python 3
+- Re-write all modules to be consistent and make proper use of module api
+	- "tell" and "reminders" modules use separate dbs
+	- "rss" module is implemented poorly
+	- "twitter" module is implemented poorly
+- Enhance db object to be more flexible
+- "Fucks Given" Module
