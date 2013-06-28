@@ -10,6 +10,7 @@ import datetime
 import re
 import skrizz.module
 import redis
+from distutils.version import StrictVersion 
 from skrizz.tools import Nick
 
 chain_length = 2 # supported values are 2 or 3, anything bigger im not dealing with.
@@ -196,12 +197,16 @@ def teach(bot, trigger):
 @skrizz.module.priority('low')
 def mstats(bot, trigger):
     info = redis_conn.info()
-    total_keys = info['db0']['keys']
-    local = ''
-    size_mem = info['used_memory_human']
-    last_save = datetime.datetime.fromtimestamp(info['rdb_last_save_time']).strftime('%Y-%m-%d %H:%M:%S')
-    changes = info['rdb_changes_since_last_save']
-    bot.say('[REDIS STATS] Keys: ' + str(total_keys) + ' | Memory Usage: ' + str(size_mem) + ' | Persistence: last_save: ' + last_save + ' changes since: ' + str(changes))
+    version = str(info['redis_version'])
+    total_keys = str(info['db0']['keys'])
+    size_mem = str(info['used_memory_human'])
+    if StrictVersion(version) < StrictVersion("2.6.0"):
+        last_save = datetime.datetime.fromtimestamp(info['last_save_time']).strftime('%Y-%m-%d %H:%M:%S')
+        changes = str(info['changes_since_last_save'])
+    else:
+        last_save = datetime.datetime.fromtimestamp(info['rdb_last_save_time']).strftime('%Y-%m-%d %H:%M:%S')
+        changes = str(info['rdb_changes_since_last_save'])
+    bot.say('[REDIS STATS] Keys: ' + total_keys + ' | Memory Usage: ' + size_mem + ' | Persistence: last_save: ' + last_save + ' changes since: ' + changes + ' | Redis Version: ' + version)
 
 
 
