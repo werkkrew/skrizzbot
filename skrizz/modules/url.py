@@ -45,6 +45,7 @@ def configure(config):
 def setup(skrizz):
     global url_finder, exclusion_char
     if skrizz.config.has_option('url', 'exclude'):
+        exclude = skrizz.config.url.exclude
         regexes = [re.compile(s) for s in
                    skrizz.config.url.get_list(exclude)]
     else:
@@ -67,6 +68,8 @@ def setup(skrizz):
         skrizz.memory['url_callbacks'] = {}
     if not skrizz.memory.contains('last_seen_url'):
         skrizz.memory['last_seen_url'] = {}
+    if not skrizz.memory.contains('last_seen_url_title'):
+        skrizz.memory['last_seen_url_title'] = {}
 
     if skrizz.config.has_option('url', 'exclusion_char'):
         exclusion_char = skrizz.config.url.exclusion_char
@@ -112,6 +115,7 @@ def title_auto(skrizz, trigger):
     urls = re.findall(url_finder, trigger)
     results = process_urls(skrizz, trigger, urls)
     skrizz.memory['last_seen_url'][trigger.sender] = urls[-1]
+    skrizz.memory['last_seen_url_title'][trigger.sender] = find_title(urls[-1])
 
     for result in results[:4]:
         message = '[ %s ] - %s' % tuple(result)

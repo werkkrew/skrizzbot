@@ -102,6 +102,8 @@ def f_post(skrizz, trigger):
             return
         post_url = skrizz.memory['last_seen_url'][trigger.sender]
         post_caption = post_content.replace("that","",1)
+        if not post_caption:
+            post_caption = skrizz.memory['last_seen_url_title'][trigger.sender]
         post_content = post_url + " " + post_caption
 
     post, meta = build_post(post_content)
