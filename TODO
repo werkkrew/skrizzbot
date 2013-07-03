@@ -1,22 +1,14 @@
 Desired list of features:
 
-- Link Titles: Echo back the title of any link pasted
-	- Parse special types of links in a certain way.
-		- Quickmeme
-		- IMDB
-		- Reddit
-		- etc.
-- Funny Pictures: Parse image links posted to the channel and record, message back a random picture when asked
-- Funny Videos: Same as above for videos
-- Remind: Allow a user to set a reminder, ping them in channel when time (potentially integrate with prowl)
+- Funny Links: Parse links posted to the channel and record, message back a random picture when asked
+	- Create a command for manual entry along with a descriptiion/comment
+- Remind: Allow a user to set a reminder, ping them in channel when time
+	- Integreate with prowl
 - Twitter: Allow users to tweet through the bots twitter account
 	- Allow users to set up their own twitter within the bot and support additional commands
-- Quote: Allow users to add a quote from a user to a database and message back a random quote when asked
-	- Might not do this due to not wanting to keep all those logs.
-- Wikipedia: Command to retrieve a portion of a wikipedia article
-- Wiktionary: Same as above for wiktionary
 - Reddit: Command to report back top links from reddit/subreddits
 - Tumblr: Allow users to post an image/video/other to a tumblr account in the bots name
+	- Allow users to set up their own tumblr within the bot.
 - Markov: Some implementation of a markov engine with canned responses and other features
 	- Integrate with bot config files
 		- Document real-time configuration changes?
@@ -32,3 +24,16 @@ Desired list of features:
 	- "twitter" module is implemented poorly
 - Enhance db object to be more flexible
 - "Fucks Given" Module
+
+Implemented Features:
+
+- Wikipedia: Command to retrieve a portion of a wikipedia article
+- Wiktionary: Same as above for wiktionary
+- Link Titles: Echo back the title of any link pasted
+    - Parse special types of links in a certain way.
+        - Quickmeme
+        - IMDB
+        - Reddit
+        - etc.
+
+
