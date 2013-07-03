@@ -81,7 +81,7 @@ def build_post(post_content):
         return {'type': 'link', 'url': post_url, 'description': post_caption}, {'url': post_url, 'caption': post_caption}
 
 def f_post(skrizz, trigger):
-    """Tweet with Skrizz's account. Admin-only."""
+    """Post to the bots tumblr account"""
     post_content = trigger.group(2)
 
     t = Tumblpy(consumer_key, consumer_secret, access_token, access_token_secret)
@@ -122,7 +122,7 @@ def f_post(skrizz, trigger):
     
 f_post.commands = ['tumblr', 'tumbl']
 f_post.priority = 'medium'
-f_post.example = '.tumblr <link> <caption> or .tumbl that <caption> to post last seen url'
+f_post.example = '.tumblr <link> <caption>, .tumbl that <caption> to post last seen url, .tumblr info for information on the bots tumblr account.'
 
 if __name__ == '__main__':
     print __doc__.strip()
