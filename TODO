@@ -6,7 +6,6 @@ Desired list of features:
 	- Integreate with prowl
 - Twitter: Allow users to tweet through the bots twitter account
 	- Allow users to set up their own twitter within the bot and support additional commands
-- Reddit: Command to report back top links from reddit/subreddits
 - Tumblr: Allow users to post an image/video/other to a tumblr account in the bots name
 	- Allow users to set up their own tumblr within the bot.
 - Markov: Some implementation of a markov engine with canned responses and other features
