@@ -10,7 +10,7 @@ Licensed under the Eiffel Forum License 2.
 import re
 from htmlentitydefs import name2codepoint
 import skrizz.web as web
-from skrizz.module import command, rule
+import skrizz.module 
 import urllib2
 import urlparse
 
@@ -42,12 +42,12 @@ def configure(config):
             'Prefix to suppress URL titling', '!')
 
 
-def setup(skrizz):
+def setup(bot):
     global url_finder, exclusion_char
-    if skrizz.config.has_option('url', 'exclude'):
-        exclude = skrizz.config.url.exclude
+    if bot.config.has_option('url', 'exclude'):
+        exclude = bot.config.url.exclude
         regexes = [re.compile(s) for s in
-                   skrizz.config.url.get_list(exclude)]
+                   bot.config.url.get_list(exclude)]
     else:
         regexes = []
 
@@ -55,75 +55,75 @@ def setup(skrizz):
     # callbacks list because 1, it's easier to deal with modules that are still
     # using this list, and not the newer callbacks list and 2, having a lambda
     # just to pass is kinda ugly.
-    if not skrizz.memory.contains('url_exclude'):
-        skrizz.memory['url_exclude'] = regexes
+    if not bot.memory.contains('url_exclude'):
+        bot.memory['url_exclude'] = regexes
     else:
-        exclude = skrizz.memory['url_exclude']
+        exclude = bot.memory['url_exclude']
         if regexes:
             exclude.append(regexes)
-        skrizz.memory['url_exclude'] = regexes
+        bot.memory['url_exclude'] = regexes
 
     # Ensure that url_callbacks and last_seen_url are in memory
-    if not skrizz.memory.contains('url_callbacks'):
-        skrizz.memory['url_callbacks'] = {}
-    if not skrizz.memory.contains('last_seen_url'):
-        skrizz.memory['last_seen_url'] = {}
-    if not skrizz.memory.contains('last_seen_url_title'):
-        skrizz.memory['last_seen_url_title'] = {}
+    if not bot.memory.contains('url_callbacks'):
+        bot.memory['url_callbacks'] = dict()
+    if not bot.memory.contains('last_seen_url'):
+        bot.memory['last_seen_url'] = dict()
+    if not bot.memory.contains('last_seen_url_title'):
+        bot.memory['last_seen_url_title'] = dict()
 
-    if skrizz.config.has_option('url', 'exclusion_char'):
-        exclusion_char = skrizz.config.url.exclusion_char
+    if bot.config.has_option('url', 'exclusion_char'):
+        exclusion_char = bot.config.url.exclusion_char
 
     url_finder = re.compile(r'(?u)(%s?(?:http|https|ftp)(?:://\S+))' %
         (exclusion_char))
 
 
-@command('title')
-def title_command(skrizz, trigger):
+@skrizz.module.command('title')
+def title_command(bot, trigger):
     """
     Show the title or URL information for the given URL, or the last URL seen
     in this channel.
     """
     if not trigger.group(2):
-        if trigger.sender not in skrizz.memory['last_seen_url']:
+        if trigger.sender not in bot.memory['last_seen_url']:
             return
-        matched = check_callbacks(skrizz, trigger,
-                                  skrizz.memory['last_seen_url'][trigger.sender],
+        matched = check_callbacks(bot, trigger,
+                                  bot.memory['last_seen_url'][trigger.sender],
                                   True)
         if matched:
             return
         else:
-            urls = [skrizz.memory['last_seen_url'][trigger.sender]]
+            urls = [bot.memory['last_seen_url'][trigger.sender]]
     else:
         urls = re.findall(url_finder, trigger)
 
-    results = process_urls(skrizz, trigger, urls)
+    results = process_urls(bot, trigger, urls)
     for result in results[:4]:
         message = '[ %s ] - %s' % tuple(result)
 
 
-@rule('(?u).*(https?://\S+).*')
-def title_auto(skrizz, trigger):
+@skrizz.module.rule('(?u).*(https?://\S+).*')
+def title_auto(bot, trigger):
     """
     Automatically show titles for URLs. For shortened URLs/redirects, find
     where the URL redirects to and show the title for that (or call a function
     from another module to give more information).
     """
-    if re.match(skrizz.config.core.prefix + 'title', trigger):
+    if re.match(bot.config.core.prefix + 'title', trigger):
         return
 
     urls = re.findall(url_finder, trigger)
-    results = process_urls(skrizz, trigger, urls)
-    skrizz.memory['last_seen_url'][trigger.sender] = urls[-1]
-    skrizz.memory['last_seen_url_title'][trigger.sender] = find_title(urls[-1])
+    results = process_urls(bot, trigger, urls)
+    bot.memory['last_seen_url'][trigger.sender] = urls[-1]
+    bot.memory['last_seen_url_title'][trigger.sender] = find_title(urls[-1])
 
     for result in results[:4]:
         message = '[ %s ] - %s' % tuple(result)
         if message != trigger:
-            skrizz.say(message)
+            bot.say(message)
 
 
-def process_urls(skrizz, trigger, urls):
+def process_urls(bot, trigger, urls):
     """
     For each URL in the list, ensure that it isn't handled by another module.
     If not, find where it redirects to, if anywhere. If that redirected URL
@@ -138,7 +138,7 @@ def process_urls(skrizz, trigger, urls):
             # Magic stuff to account for international domain names
             url = iri_to_uri(url)
             # First, check that the URL we got doesn't match
-            matched = check_callbacks(skrizz, trigger, url, False)
+            matched = check_callbacks(bot, trigger, url, False)
             if matched:
                 continue
             # Then see if it redirects anywhere
@@ -146,7 +146,7 @@ def process_urls(skrizz, trigger, urls):
             if not new_url:
                 continue
             # Then see if the final URL matches anything
-            matched = check_callbacks(skrizz, trigger, new_url, new_url != url)
+            matched = check_callbacks(bot, trigger, new_url, new_url != url)
             if matched:
                 continue
             # Finally, actually show the URL
@@ -170,20 +170,20 @@ def follow_redirects(url):
     return url
 
 
-def check_callbacks(skrizz, trigger, url, run=True):
+def check_callbacks(bot, trigger, url, run=True):
     """
     Check the given URL against the callbacks list. If it matches, and ``run``
     is given as ``True``, run the callback function, otherwise pass. Returns
     ``True`` if the url matched anything in the callbacks list.
     """
     # Check if it matches the exclusion list first
-    matched = any(regex.search(url) for regex in skrizz.memory['url_exclude'])
+    matched = any(regex.search(url) for regex in bot.memory['url_exclude'])
     # Then, check if there's anything in the callback list
-    for regex, function in skrizz.memory['url_callbacks'].iteritems():
+    for regex, function in bot.memory['url_callbacks'].iteritems():
         match = regex.search(url)
         if match:
             if run:
-                function(skrizz, trigger, match)
+                function(bot, trigger, match)
             matched = True
     return matched
 

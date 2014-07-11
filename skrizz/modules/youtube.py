@@ -12,22 +12,19 @@ This module will respond to .yt and .youtube commands and searches the youtubes.
 """
 
 import skrizz.web as web
+import skrizz.module
 import json
 import re
 from HTMLParser import HTMLParser
 
 
-def setup(skrizz):
+def setup(bot):
     regex = re.compile('(youtube.com/watch\S*v=|youtu.be/)([\w-]+)')
-    if not skrizz.memory.contains('url_callbacks'):
-        skrizz.memory['url_callbacks'] = {regex, ytinfo}
-    else:
-        exclude = skrizz.memory['url_callbacks']
-        exclude[regex] = ytinfo
-        skrizz.memory['url_callbacks'] = exclude
+    if not bot.memory.contains('url_callbacks'):
+        bot.memory['url_callbacks'] = dict()
+        bot.memory['url_callbacks'][regex] = ytinfo
 
-
-def ytget(skrizz, trigger, uri):
+def ytget(bot, trigger, uri):
     try:
         bytes = web.get(uri)
         result = json.loads(bytes)
@@ -36,7 +33,7 @@ def ytget(skrizz, trigger, uri):
         else:
             video_entry = result['entry']
     except:
-        skrizz.say('Something went wrong when accessing the YouTube API.')
+        bot.say('Something went wrong when accessing the YouTube API.')
         return 'err'
     vid_info = {}
     try:
@@ -121,20 +118,20 @@ def ytget(skrizz, trigger, uri):
     return vid_info
 
 
-def ytsearch(skrizz, trigger):
+def ytsearch(bot, trigger):
     """Search YouTube"""
     #modified from ytinfo: Copyright 2010-2011, Michael Yanovich, yanovich.net, Kenneth Sham.
     if not trigger.group(2):
         return
     uri = 'http://gdata.youtube.com/feeds/api/videos?v=2&alt=json&max-results=1&q=' + trigger.group(2).encode('utf-8')
     uri = uri.replace(' ', '+')
-    video_info = ytget(skrizz, trigger, uri)
+    video_info = ytget(bot, trigger, uri)
 
     if video_info is 'err':
         return
 
     if video_info['link'] == 'N/A':
-        skrizz.say("Sorry, I couldn't find the video you are looking for")
+        bot.say("Sorry, I couldn't find the video you are looking for")
         return
     message = ('[YT Search] Title: ' + video_info['title'] +
               ' | Uploader: ' + video_info['uploader'] +
@@ -143,12 +140,12 @@ def ytsearch(skrizz, trigger):
               ' | Views: ' + video_info['views'] +
               ' | Link: ' + video_info['link'])
 
-    skrizz.say(HTMLParser().unescape(message))
+    bot.say(HTMLParser().unescape(message))
 ytsearch.commands = ['yt', 'youtube']
 ytsearch.example = '.yt how to be a nerdfighter FAQ'
 
 
-def ytinfo(skrizz, trigger, found_match=None):
+def ytinfo(bot, trigger, found_match=None):
     """
     Get information about the latest video uploaded by the channel provided.
     """
@@ -156,7 +153,7 @@ def ytinfo(skrizz, trigger, found_match=None):
     #Grab info from YT API
     uri = 'http://gdata.youtube.com/feeds/api/videos/' + match.group(2) + '?v=2&alt=json'
 
-    video_info = ytget(skrizz, trigger, uri)
+    video_info = ytget(bot, trigger, uri)
     if video_info is 'err':
         return
 
@@ -170,15 +167,15 @@ def ytinfo(skrizz, trigger, found_match=None):
               ' | Likes: ' + video_info['likes'] + \
               ' | Dislikes: ' + video_info['dislikes']
 
-    skrizz.say(HTMLParser().unescape(message))
+    bot.say(HTMLParser().unescape(message))
 ytinfo.rule = '.*(youtube.com/watch\S*v=|youtu.be/)([\w-]+).*'
 
 
-def ytlast(skrizz, trigger):
+def ytlast(bot, trigger):
     if not trigger.group(2):
         return
     uri = 'https://gdata.youtube.com/feeds/api/users/' + trigger.group(2).encode('utf-8') + '/uploads?max-results=1&alt=json&v=2'
-    video_info = ytget(skrizz, trigger, uri)
+    video_info = ytget(bot, trigger, uri)
 
     if video_info is 'err':
         return
@@ -191,7 +188,7 @@ def ytlast(skrizz, trigger):
               ' | Dislikes: ' + video_info['dislikes'] +
               ' | Link: ' + video_info['link'])
 
-    skrizz.say(HTMLParser().unescape(message))
+    bot.say(HTMLParser().unescape(message))
 ytlast.commands = ['ytlast', 'ytnew', 'ytlatest']
 ytlast.example = '.ytlast vlogbrothers'
 

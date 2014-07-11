@@ -19,7 +19,7 @@ meme_url = '(%s/meme/[\w-]+)' % domain
 def setup(bot):
     meme_regex = re.compile(meme_url)
     if not bot.memory.contains('url_callbacks'):
-        bot.memory['url_callbacks'] = {}
+        bot.memory['url_callbacks'] = dict()
     bot.memory['url_callbacks'][meme_regex] = meme_info
 
 

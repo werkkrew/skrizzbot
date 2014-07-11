@@ -120,10 +120,12 @@ def manual_notify(bot, trigger):
 
         if notify and notify.status_code == 200:
             return bot.reply("Message sent successfully!")
-        elif not notify:
-            return bot.reply("I am not yet set up to notify using that service!")
+        elif notify == False:
+            return bot.reply("I am not yet set up to notify using the " + push_service + " service specified by the user.")
         else:
-            return bot.reply("Something went wrong, status code = " + notify.status_code)
+            return bot.reply("Something went wrong, status code = " + str(notify.status_code))
+    else:
+        return bot.reply("The user " + notify_to + " is not set up to recieve notifications!")
 
 
 if __name__ == '__main__':

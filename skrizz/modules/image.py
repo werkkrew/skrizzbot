@@ -28,7 +28,7 @@ headers = {'User-Agent' : "Mozilla/5.0 (Windows NT 6.0; WOW64) AppleWebKit/534.2
 def setup(bot):
     image_regex = re.compile(image_url)
     if not bot.memory.contains('url_callbacks'):
-        bot.memory['url_callbacks'] = {}
+        bot.memory['url_callbacks'] = dict()
     bot.memory['url_callbacks'][image_regex] = image_info
 
 

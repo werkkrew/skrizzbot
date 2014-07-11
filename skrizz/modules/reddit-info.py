@@ -17,14 +17,14 @@ def setup(bot):
     post_regex = re.compile(post_url)
     user_regex = re.compile(user_url)
     if not bot.memory.contains('url_callbacks'):
-        bot.memory['url_callbacks'] = {}
+        bot.memory['url_callbacks'] = dict()
     bot.memory['url_callbacks'][post_regex] = rpost_info
     bot.memory['url_callbacks'][user_regex] = redditor_info
 
 
 @rule('.*%s.*' % post_url)
 def rpost_info(bot, trigger, match=None):
-    r = praw.Reddit(user_agent='phenny / skrizz IRC bot - see dft.ba/-skrizzsource for more')
+    r = praw.Reddit(user_agent='skrizzzz / skrizz IRC bot')
     match = match or trigger
     s = r.get_submission(url=match.group(1))
 
